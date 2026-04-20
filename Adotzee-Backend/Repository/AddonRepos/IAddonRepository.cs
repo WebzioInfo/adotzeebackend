@@ -11,8 +11,8 @@ namespace Adotzee_Backend.Repository.AddonRepos
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<AddonCourse>> GetByCourseIdAsync(int courseId);
         Task<IEnumerable<College>> GetCollegesByAddonIdAsync(int addonCourseId);
-
         Task<PagedResponse<AddonCourse>> GetPagedAsync(PaginationParams @params);
         Task UpdateOrderAsync(List<int> ids);
+
     }
 }

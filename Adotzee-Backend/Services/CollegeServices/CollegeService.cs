@@ -22,44 +22,6 @@ public class CollegeService : ICollegeService
         return ApiResponse<List<CollegeResponseDTO>>.SuccessResponse(dto);
     }
 
-    public async Task<ApiResponse<CollegeResponseDTO>> GetByIdAsync(int id)
-    {
-        var college = await _repo.GetByIdAsync(id);
-        if (college == null)
-            return ApiResponse<CollegeResponseDTO>.FailResponse("College not found");
-
-        var dto = _mapper.Map<CollegeResponseDTO>(college);
-        return ApiResponse<CollegeResponseDTO>.SuccessResponse(dto);
-    }
-
-    public async Task<ApiResponse<string>> CreateAsync(CollegeCreateDTO dto)
-    {
-        var college = _mapper.Map<College>(dto);
-        await _repo.AddAsync(college, dto.AddonIds);
-        return ApiResponse<string>.SuccessResponse("College created successfully");
-    }
-
-    public async Task<ApiResponse<string>> UpdateAsync(CollegeUpdateDTO dto)
-    {
-        var college = await _repo.GetByIdAsync(dto.Id);
-        if (college == null)
-            return ApiResponse<string>.FailResponse("College not found");
-
-        _mapper.Map(dto, college);
-        await _repo.UpdateAsync(college, dto.AddonIds);
-        return ApiResponse<string>.SuccessResponse("College updated successfully");
-    }
-
-    public async Task<ApiResponse<string>> DeleteAsync(int id)
-    {
-        var college = await _repo.GetByIdAsync(id);
-        if (college == null)
-            return ApiResponse<string>.FailResponse("College not found");
-
-        await _repo.DeleteAsync(college);
-        return ApiResponse<string>.SuccessResponse("College deleted successfully");
-    }
-
     public async Task<ApiResponse<PagedResponse<CollegeResponseDTO>>> GetPagedAsync(PaginationParams @params)
     {
         try
@@ -84,7 +46,71 @@ public class CollegeService : ICollegeService
         }
         catch (Exception ex)
         {
-            return ApiResponse<string>.FailResponse("Error: " + ex.Message);
+            return ApiResponse<string>.FailResponse("Error updating order: " + ex.Message);
         }
     }
+
+    public async Task<ApiResponse<CollegeResponseDTO>> GetByIdAsync(int id)
+    {
+        var college = await _repo.GetByIdAsync(id);
+        if (college == null)
+            return ApiResponse<CollegeResponseDTO>.FailResponse("College not found");
+
+        var dto = _mapper.Map<CollegeResponseDTO>(college);
+        return ApiResponse<CollegeResponseDTO>.SuccessResponse(dto);
+    }
+
+    public async Task<ApiResponse<string>> CreateAsync(CollegeCreateDTO dto)
+    {
+        if (!IsValidLocation(dto.Latitude, dto.Longitude))
+            return ApiResponse<string>.FailResponse("Invalid latitude or longitude");
+
+        var college = _mapper.Map<College>(dto);
+        await _repo.AddAsync(college, dto.AddonIds);
+        return ApiResponse<string>.SuccessResponse("College created successfully");
+    }
+
+
+    public async Task<ApiResponse<string>> UpdateAsync(CollegeUpdateDTO dto)
+    {
+        var college = await _repo.GetByIdAsync(dto.Id);
+        if (college == null)
+            return ApiResponse<string>.FailResponse("College not found");
+
+        if (!IsValidLocation(dto.Latitude, dto.Longitude))
+            return ApiResponse<string>.FailResponse("Invalid latitude or longitude");
+
+        _mapper.Map(dto, college);
+        await _repo.UpdateAsync(college, dto.AddonIds);
+        return ApiResponse<string>.SuccessResponse("College updated successfully");
+    }
+
+
+    public async Task<ApiResponse<string>> DeleteAsync(int id)
+    {
+        var college = await _repo.GetByIdAsync(id);
+        if (college == null)
+            return ApiResponse<string>.FailResponse("College not found");
+
+        await _repo.DeleteAsync(college);
+        return ApiResponse<string>.SuccessResponse("College deleted successfully");
+    }
+
+    private bool IsValidLocation(double? lat, double? lng)
+    {
+        if (lat == null && lng == null)
+            return true; // allowed
+
+        if (lat == null || lng == null)
+            return false;
+
+        if (lat < -90 || lat > 90)
+            return false;
+
+        if (lng < -180 || lng > 180)
+            return false;
+
+        return true;
+    }
+
 }

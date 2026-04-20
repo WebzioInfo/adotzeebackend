@@ -1,7 +1,8 @@
 using Adotzee_Backend.DTOs.CollegeDTOs;
-using Adotzee_Backend.Models;
 using Adotzee_Backend.Services.CollegeServices;
+using Adotzee_Backend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Adotzee_Backend.Controllers
 {
@@ -20,6 +21,7 @@ namespace Adotzee_Backend.Controllers
         public async Task<IActionResult> GetAll([FromQuery] PaginationParams @params)
             => Ok(await _service.GetPagedAsync(@params));
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("reorder")]
         public async Task<IActionResult> Reorder([FromBody] List<int> ids)
             => Ok(await _service.ReorderAsync(ids));
@@ -28,6 +30,7 @@ namespace Adotzee_Backend.Controllers
         public async Task<IActionResult> Get(int id)
             => Ok(await _service.GetByIdAsync(id));
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CollegeCreateDTO dto)
         {
@@ -37,6 +40,7 @@ namespace Adotzee_Backend.Controllers
             return Ok(await _service.CreateAsync(dto));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] CollegeUpdateDTO dto)
         {
@@ -46,6 +50,7 @@ namespace Adotzee_Backend.Controllers
             return Ok(await _service.UpdateAsync(dto));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
             => Ok(await _service.DeleteAsync(id));

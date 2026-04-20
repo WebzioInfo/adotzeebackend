@@ -8,6 +8,8 @@ namespace Adotzee_Backend.Services.CourseServices
     public interface ICourseService
     {
         Task<ApiResponse<List<CourseResponseDTO>>> GetAllAsync();
+        Task<ApiResponse<PagedResponse<CourseResponseDTO>>> GetPagedAsync(PaginationParams @params);
+        Task<ApiResponse<string>> ReorderAsync(List<int> ids);
         Task<ApiResponse<CourseResponseDTO>> GetByIdAsync(int id);
         Task<ApiResponse<CourseResponseDTO>> CreateAsync(CourseCreateDTO dto);
         Task<ApiResponse<CourseResponseDTO>> UpdateAsync(CourseUpdateDTO dto);
@@ -15,7 +17,5 @@ namespace Adotzee_Backend.Services.CourseServices
         Task<ApiResponse<object>> GetDashboardStats();
         Task<ApiResponse<List<CourseResponseDTO>>> FilterByTypeStreamAsync(string type, string stream);
         Task<ApiResponse<IEnumerable<AddonCourseResponseDTO>>> GetAddonCoursesByCourseIdAsync(int courseId);
-        Task<ApiResponse<PagedResponse<CourseResponseDTO>>> GetPagedAsync(PaginationParams @params);
-        Task<ApiResponse<string>> ReorderAsync(List<int> ids);
     }
 }

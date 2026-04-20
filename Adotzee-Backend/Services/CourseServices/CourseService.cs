@@ -35,6 +35,34 @@ namespace Adotzee_Backend.Services.CourseServices
             }
         }
 
+        public async Task<ApiResponse<PagedResponse<CourseResponseDTO>>> GetPagedAsync(PaginationParams @params)
+        {
+            try
+            {
+                var paged = await _repo.GetPagedAsync(@params);
+                var mappedItems = _mapper.Map<List<CourseResponseDTO>>(paged.Items);
+                var response = new PagedResponse<CourseResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
+                return ApiResponse<PagedResponse<CourseResponseDTO>>.SuccessResponse(response);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<PagedResponse<CourseResponseDTO>>.FailResponse("Error: " + ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse<string>> ReorderAsync(List<int> ids)
+        {
+            try
+            {
+                await _repo.UpdateOrderAsync(ids);
+                return ApiResponse<string>.SuccessResponse("Order updated");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<string>.FailResponse("Error updating order: " + ex.Message);
+            }
+        }
+
         public async Task<ApiResponse<CourseResponseDTO>> GetByIdAsync(int id)
         {
             try
@@ -113,19 +141,31 @@ namespace Adotzee_Backend.Services.CourseServices
             }
         }
 
-        public async Task<ApiResponse<List<CourseResponseDTO>>> FilterByTypeStreamAsync(string type, string stream)
+        public async Task<ApiResponse<List<CourseResponseDTO>>> FilterByTypeStreamAsync(string? type, string? stream)
         {
             try
             {
-                // Parse CourseType
-                if (!Enum.TryParse<CourseType>(type, true, out var courseType))
-                    return ApiResponse<List<CourseResponseDTO>>.FailResponse("Invalid course type");
+                CourseType? courseType = null;
+                StreamType? streamType = null;
 
-                // Parse StreamType
-                if (!Enum.TryParse<StreamType>(stream, true, out var streamType))
-                    return ApiResponse<List<CourseResponseDTO>>.FailResponse("Invalid stream type");
+                // Parse CourseType if provided
+                if (!string.IsNullOrEmpty(type))
+                {
+                    if (!Enum.TryParse<CourseType>(type, true, out var parsedType))
+                        return ApiResponse<List<CourseResponseDTO>>.FailResponse("Invalid course type");
 
-                // Call repository
+                    courseType = parsedType;
+                }
+
+                // Parse StreamType if provided
+                if (!string.IsNullOrEmpty(stream))
+                {
+                    if (!Enum.TryParse<StreamType>(stream, true, out var parsedStream))
+                        return ApiResponse<List<CourseResponseDTO>>.FailResponse("Invalid stream type");
+
+                    streamType = parsedStream;
+                }
+
                 var result = await _repo.FilterByTypeStreamAsync(courseType, streamType);
                 var mapped = _mapper.Map<List<CourseResponseDTO>>(result);
 
@@ -136,7 +176,6 @@ namespace Adotzee_Backend.Services.CourseServices
                 return ApiResponse<List<CourseResponseDTO>>.FailResponse("Error filtering: " + ex.Message);
             }
         }
-
         public async Task<ApiResponse<IEnumerable<AddonCourseResponseDTO>>> GetAddonCoursesByCourseIdAsync(int courseId)
         {
             try
@@ -158,33 +197,6 @@ namespace Adotzee_Backend.Services.CourseServices
             }
         }
 
-        public async Task<ApiResponse<PagedResponse<CourseResponseDTO>>> GetPagedAsync(PaginationParams @params)
-        {
-            try
-            {
-                var paged = await _repo.GetPagedAsync(@params);
-                var mappedItems = _mapper.Map<List<CourseResponseDTO>>(paged.Items);
-                var response = new PagedResponse<CourseResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
-                return ApiResponse<PagedResponse<CourseResponseDTO>>.SuccessResponse(response);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<PagedResponse<CourseResponseDTO>>.FailResponse("Error: " + ex.Message);
-            }
-        }
-
-        public async Task<ApiResponse<string>> ReorderAsync(List<int> ids)
-        {
-            try
-            {
-                await _repo.UpdateOrderAsync(ids);
-                return ApiResponse<string>.SuccessResponse("Order updated");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<string>.FailResponse("Error: " + ex.Message);
-            }
-        }
 
     }
 }

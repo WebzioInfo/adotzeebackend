@@ -15,18 +15,51 @@ namespace Adotzee_Backend.Repository.CoursesRepositories
 
         public async Task<List<Course>> GetAllAsync()
         {
-            return await _context.Courses.OrderBy(c => c.DisplayOrder).ToListAsync();
+            return await _context.Courses.AsNoTracking().OrderBy(c => c.DisplayOrder).ToListAsync();
+        }
+
+        public async Task<PagedResponse<Course>> GetPagedAsync(PaginationParams @params)
+        {
+            var query = _context.Courses.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(@params.Search))
+            {
+                var lowerSearch = @params.Search.ToLower();
+                query = query.Where(c => c.Name.ToLower().Contains(lowerSearch) ||
+                                         c.Type.ToString().ToLower().Contains(lowerSearch) ||
+                                         c.Stream.ToString().ToLower().Contains(lowerSearch));
+            }
+
+            int totalCount = await query.CountAsync();
+            var items = await query.OrderBy(c => c.DisplayOrder)
+                                   .Skip((@params.PageNumber - 1) * @params.PageSize)
+                                   .Take(@params.PageSize)
+                                   .ToListAsync();
+
+            return new PagedResponse<Course>(items, totalCount, @params.PageNumber, @params.PageSize);
+        }
+
+        public async Task UpdateOrderAsync(List<int> ids)
+        {
+            var courses = await _context.Courses.Where(c => ids.Contains(c.Id)).ToListAsync();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var course = courses.FirstOrDefault(c => c.Id == ids[i]);
+                if (course != null)
+                {
+                    course.DisplayOrder = i;
+                }
+            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Course?> GetByIdAsync(int id)
         {
-            return await _context.Courses.FindAsync(id);
+            return await _context.Courses.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<Course> AddAsync(Course course)
         {
-            var maxOrder = await _context.Courses.MaxAsync(c => (int?)c.DisplayOrder) ?? 0;
-            course.DisplayOrder = maxOrder + 1;
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();
             return course;
@@ -54,52 +87,25 @@ namespace Adotzee_Backend.Repository.CoursesRepositories
             return await _context.Courses.CountAsync();
         }
 
-        public async Task<List<Course>> FilterByTypeStreamAsync(CourseType type, StreamType stream)
+        public async Task<List<Course>> FilterByTypeStreamAsync(CourseType? type, StreamType? stream)
         {
-            return await _context.Courses
-                .Where(c => c.Type == type && c.Stream == stream)
-                .ToListAsync();
+            var query = _context.Courses.AsNoTracking().AsQueryable();
+
+            if (type.HasValue)
+                query = query.Where(c => c.Type == type.Value);
+
+            if (stream.HasValue)
+                query = query.Where(c => c.Stream == stream.Value);
+
+            return await query.ToListAsync();
         }
         public async Task<IEnumerable<AddonCourse>> GetAddonCoursesByCourseIdAsync(int courseId)
         {
             return await _context.AddonCourses
                 .Where(a => a.CourseId == courseId)
-                .OrderBy(a => a.DisplayOrder)
                 .Include(a => a.AddonColleges).ThenInclude(ac => ac.College)
+                .AsNoTracking()
                 .ToListAsync();
-        }
-
-        public async Task<PagedResponse<Course>> GetPagedAsync(PaginationParams @params)
-        {
-            var query = _context.Courses.AsQueryable();
-
-            if (!string.IsNullOrEmpty(@params.Search))
-            {
-                query = query.Where(c => c.Name.Contains(@params.Search));
-            }
-
-            var totalCount = await query.CountAsync();
-            var items = await query
-                .OrderBy(c => c.DisplayOrder)
-                .Skip((@params.PageNumber - 1) * @params.PageSize)
-                .Take(@params.PageSize)
-                .ToListAsync();
-
-            return new PagedResponse<Course>(items, totalCount, @params.PageNumber, @params.PageSize);
-        }
-
-        public async Task UpdateOrderAsync(List<int> ids)
-        {
-            var courses = await _context.Courses.Where(c => ids.Contains(c.Id)).ToListAsync();
-            for (int i = 0; i < ids.Count; i++)
-            {
-                var course = courses.FirstOrDefault(c => c.Id == ids[i]);
-                if (course != null)
-                {
-                    course.DisplayOrder = i + 1;
-                }
-            }
-            await _context.SaveChangesAsync();
         }
 
     }

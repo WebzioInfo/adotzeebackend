@@ -16,11 +16,49 @@ namespace Adotzee_Backend.Repository.CollegeRepos
         public async Task<List<College>> GetAllAsync()
         {
             return await _context.Colleges
-                .OrderBy(c => c.DisplayOrder)
                 .Include(c => c.AddonColleges)
                     .ThenInclude(ac => ac.AddonCourse)
                 .AsNoTracking()
+                .OrderBy(c => c.DisplayOrder)
                 .ToListAsync();
+        }
+
+        public async Task<PagedResponse<College>> GetPagedAsync(PaginationParams @params)
+        {
+            var query = _context.Colleges
+                .Include(c => c.AddonColleges)
+                    .ThenInclude(ac => ac.AddonCourse)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(@params.Search))
+            {
+                var lowerSearch = @params.Search.ToLower();
+                query = query.Where(c => (c.Name != null && c.Name.ToLower().Contains(lowerSearch)) ||
+                                         (c.Address != null && c.Address.ToLower().Contains(lowerSearch)));
+            }
+
+            int totalCount = await query.CountAsync();
+            var items = await query.OrderBy(c => c.DisplayOrder)
+                                   .Skip((@params.PageNumber - 1) * @params.PageSize)
+                                   .Take(@params.PageSize)
+                                   .ToListAsync();
+
+            return new PagedResponse<College>(items, totalCount, @params.PageNumber, @params.PageSize);
+        }
+
+        public async Task UpdateOrderAsync(List<int> ids)
+        {
+            var colleges = await _context.Colleges.Where(c => ids.Contains(c.Id)).ToListAsync();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var college = colleges.FirstOrDefault(c => c.Id == ids[i]);
+                if (college != null)
+                {
+                    college.DisplayOrder = i;
+                }
+            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task<College?> GetByIdAsync(int id)
@@ -33,9 +71,6 @@ namespace Adotzee_Backend.Repository.CollegeRepos
 
         public async Task AddAsync(College college, List<int>? addonIds)
         {
-            var maxOrder = await _context.Colleges.MaxAsync(c => (int?)c.DisplayOrder) ?? 0;
-            college.DisplayOrder = maxOrder + 1;
-
             _context.Colleges.Add(college);
             await _context.SaveChangesAsync();
 
@@ -84,41 +119,5 @@ namespace Adotzee_Backend.Repository.CollegeRepos
             _context.Colleges.Remove(college);
             await _context.SaveChangesAsync();
         }
-
-        public async Task<PagedResponse<College>> GetPagedAsync(PaginationParams @params)
-        {
-            var query = _context.Colleges.AsQueryable();
-
-            if (!string.IsNullOrEmpty(@params.Search))
-            {
-                query = query.Where(c => c.Name.Contains(@params.Search) || c.Address.Contains(@params.Search));
-            }
-
-            var totalCount = await query.CountAsync();
-            var items = await query
-                .OrderBy(c => c.DisplayOrder)
-                .Skip((@params.PageNumber - 1) * @params.PageSize)
-                .Take(@params.PageSize)
-                .Include(c => c.AddonColleges)
-                    .ThenInclude(ac => ac.AddonCourse)
-                .ToListAsync();
-
-            return new PagedResponse<College>(items, totalCount, @params.PageNumber, @params.PageSize);
-        }
-
-        public async Task UpdateOrderAsync(List<int> ids)
-        {
-            var colleges = await _context.Colleges.Where(c => ids.Contains(c.Id)).ToListAsync();
-            for (int i = 0; i < ids.Count; i++)
-            {
-                var college = colleges.FirstOrDefault(c => c.Id == ids[i]);
-                if (college != null)
-                {
-                    college.DisplayOrder = i + 1;
-                }
-            }
-            await _context.SaveChangesAsync();
-        }
-
     }
 }

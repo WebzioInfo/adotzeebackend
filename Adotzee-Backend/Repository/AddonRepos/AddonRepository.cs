@@ -16,10 +16,48 @@ namespace Adotzee_Backend.Repository.AddonRepos
         public async Task<List<AddonCourse>> GetAllAsync()
         {
             return await _context.AddonCourses
-                .OrderBy(a => a.DisplayOrder)
                 .Include(a => a.Course)
                 .Include(a => a.AddonColleges).ThenInclude(ac => ac.College)
+                .OrderBy(a => a.DisplayOrder)
                 .ToListAsync();
+        }
+
+        public async Task<PagedResponse<AddonCourse>> GetPagedAsync(PaginationParams @params)
+        {
+            var query = _context.AddonCourses
+                .Include(a => a.Course)
+                .Include(a => a.AddonColleges).ThenInclude(ac => ac.College)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(@params.Search))
+            {
+                var lowerSearch = @params.Search.ToLower();
+                query = query.Where(a => a.Name.ToLower().Contains(lowerSearch) ||
+                                         a.Course.Name.ToLower().Contains(lowerSearch));
+            }
+
+            int totalCount = await query.CountAsync();
+            var items = await query.OrderBy(a => a.DisplayOrder)
+                                   .Skip((@params.PageNumber - 1) * @params.PageSize)
+                                   .Take(@params.PageSize)
+                                   .ToListAsync();
+
+            return new PagedResponse<AddonCourse>(items, totalCount, @params.PageNumber, @params.PageSize);
+        }
+
+        public async Task UpdateOrderAsync(List<int> ids)
+        {
+            var addons = await _context.AddonCourses.Where(a => ids.Contains(a.Id)).ToListAsync();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var addon = addons.FirstOrDefault(a => a.Id == ids[i]);
+                if (addon != null)
+                {
+                    addon.DisplayOrder = i;
+                }
+            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task<AddonCourse?> GetByIdAsync(int id)
@@ -32,8 +70,6 @@ namespace Adotzee_Backend.Repository.AddonRepos
 
         public async Task<AddonCourse> CreateAsync(AddonCourse addon)
         {
-            var maxOrder = await _context.AddonCourses.MaxAsync(a => (int?)a.DisplayOrder) ?? 0;
-            addon.DisplayOrder = maxOrder + 1;
             _context.AddonCourses.Add(addon);
             await _context.SaveChangesAsync();
             return addon;
@@ -74,41 +110,6 @@ namespace Adotzee_Backend.Repository.AddonRepos
                 .Include(ac => ac.College)
                 .Select(ac => ac.College)
                 .ToListAsync();
-        }
-
-        public async Task<PagedResponse<AddonCourse>> GetPagedAsync(PaginationParams @params)
-        {
-            var query = _context.AddonCourses.AsQueryable();
-
-            if (!string.IsNullOrEmpty(@params.Search))
-            {
-                query = query.Where(a => a.Name.Contains(@params.Search) || a.Course.Name.Contains(@params.Search));
-            }
-
-            var totalCount = await query.CountAsync();
-            var items = await query
-                .OrderBy(a => a.DisplayOrder)
-                .Skip((@params.PageNumber - 1) * @params.PageSize)
-                .Take(@params.PageSize)
-                .Include(a => a.Course)
-                .Include(a => a.AddonColleges).ThenInclude(ac => ac.College)
-                .ToListAsync();
-
-            return new PagedResponse<AddonCourse>(items, totalCount, @params.PageNumber, @params.PageSize);
-        }
-
-        public async Task UpdateOrderAsync(List<int> ids)
-        {
-            var addons = await _context.AddonCourses.Where(a => ids.Contains(a.Id)).ToListAsync();
-            for (int i = 0; i < ids.Count; i++)
-            {
-                var addon = addons.FirstOrDefault(a => a.Id == ids[i]);
-                if (addon != null)
-                {
-                    addon.DisplayOrder = i + 1;
-                }
-            }
-            await _context.SaveChangesAsync();
         }
 
     }

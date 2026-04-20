@@ -8,16 +8,16 @@ namespace Adotzee_Backend.Models
 
         // Real-world location fields
         public string? Address { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
 
         // Optional but powerful
         public string? GoogleMapsUrl { get; set; }
         public string? PlaceId { get; set; }
 
-        public bool IsRecommended { get; set; }
-        public int DisplayOrder { get; set; }
+        public bool? IsRecommended { get; set; }
+        public int DisplayOrder { get; set; } = 0;
 
-        public ICollection<AddonCollege> AddonColleges { get; set; }
+        public ICollection<AddonCollege> AddonColleges { get; set; } = new List<AddonCollege>();
     }
 }

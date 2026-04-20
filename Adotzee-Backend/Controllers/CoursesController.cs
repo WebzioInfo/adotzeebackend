@@ -1,7 +1,8 @@
 using Adotzee_Backend.DTOs.CourseDTOs;
-using Adotzee_Backend.Models;
 using Adotzee_Backend.Services.CourseServices;
+using Adotzee_Backend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Adotzee_Backend.Controllers
 {
@@ -23,6 +24,7 @@ namespace Adotzee_Backend.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("reorder")]
         public async Task<IActionResult> Reorder([FromBody] List<int> ids)
         {
@@ -37,6 +39,7 @@ namespace Adotzee_Backend.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CourseCreateDTO dto)
         {
@@ -44,6 +47,7 @@ namespace Adotzee_Backend.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] CourseUpdateDTO dto)
         {
@@ -51,6 +55,7 @@ namespace Adotzee_Backend.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -59,9 +64,9 @@ namespace Adotzee_Backend.Controllers
         }
 
         [HttpGet("filter")]
-        public async Task<IActionResult> FilterByTypeStream([FromQuery] string type, [FromQuery] string stream)
+        public async Task<IActionResult> FilterByTypeStream([FromQuery] string? type, [FromQuery] string? stream)
         {
-            var result = await _service.FilterByTypeStreamAsync(type, stream);
+            var result = await _service.FilterByTypeStreamAsync(type ?? "", stream ?? "");
             return Ok(result);
         }
 

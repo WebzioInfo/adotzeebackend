@@ -14,6 +14,8 @@ namespace Adotzee_Backend.Data
         public DbSet<AddonCourse> AddonCourses { get; set; }
         public DbSet<College> Colleges { get; set; }
         public DbSet<AddonCollege> AddonColleges { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Lead> Leads { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

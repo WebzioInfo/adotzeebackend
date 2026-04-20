@@ -1,15 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Adotzee_Backend.DTOs.CourseDTOs
 {
     public class CourseCreateDTO
     {
         [Required]
-        public string Name { get; set; }
-        public string Duration { get; set; }
+        public required string Name { get; set; }
         [Required]
-        public string Type { get; set; }  // "UG", "PG"
+        public required string Duration { get; set; }
         [Required]
-        public string Stream { get; set; }
+        public required string Type { get; set; }  // "UG", "PG"
+        [Required]
+        public required string Stream { get; set; }
     }
 }

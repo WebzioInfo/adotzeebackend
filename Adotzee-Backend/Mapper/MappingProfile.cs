@@ -2,6 +2,8 @@
 using Adotzee_Backend.DTOs.AddonDTOs;
 using Adotzee_Backend.DTOs.CollegeDTOs;
 using Adotzee_Backend.DTOs.CourseDTOs;
+using Adotzee_Backend.DTOs.UserDTOs;
+using Adotzee_Backend.DTOs.LeadDTOs;
 using Adotzee_Backend.Helpers;
 using Adotzee_Backend.Models;
 using AutoMapper;
@@ -12,6 +14,13 @@ namespace Adotzee_Backend.Mapper
     {
         public MappingProfile()
         {
+            CreateMap<User, LoginResponseDTO>();
+            CreateMap<RegisterDTO, User>();
+
+            CreateMap<Lead, LeadResponseDTO>();
+            CreateMap<LeadCreateDTO, Lead>();
+            CreateMap<LeadUpdateDTO, Lead>();
+
             CreateMap<Course, CourseResponseDTO>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
                 .ForMember(dest => dest.Stream, opt => opt.MapFrom(src => src.Stream.ToString()));

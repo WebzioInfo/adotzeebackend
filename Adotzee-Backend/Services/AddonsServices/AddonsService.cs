@@ -32,6 +32,34 @@ namespace Adotzee_Backend.Services.AddonsServices
             }
         }
 
+        public async Task<ApiResponse<PagedResponse<AddonCourseResponseDTO>>> GetPagedAsync(PaginationParams @params)
+        {
+            try
+            {
+                var paged = await _repo.GetPagedAsync(@params);
+                var mappedItems = _mapper.Map<List<AddonCourseResponseDTO>>(paged.Items);
+                var response = new PagedResponse<AddonCourseResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
+                return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.SuccessResponse(response);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.FailResponse("Error: " + ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse<string>> ReorderAsync(List<int> ids)
+        {
+            try
+            {
+                await _repo.UpdateOrderAsync(ids);
+                return ApiResponse<string>.SuccessResponse("Order updated");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<string>.FailResponse("Error updating order: " + ex.Message);
+            }
+        }
+
         public async Task<ApiResponse<AddonCourseResponseDTO>> GetByIdAsync(int id)
         {
             try
@@ -138,33 +166,6 @@ namespace Adotzee_Backend.Services.AddonsServices
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<CollegeResponseDTO>>.FailResponse($"An error occurred: {ex.Message}");
-            }
-        }
-        public async Task<ApiResponse<PagedResponse<AddonCourseResponseDTO>>> GetPagedAsync(PaginationParams @params)
-        {
-            try
-            {
-                var paged = await _repo.GetPagedAsync(@params);
-                var mappedItems = _mapper.Map<List<AddonCourseResponseDTO>>(paged.Items);
-                var response = new PagedResponse<AddonCourseResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
-                return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.SuccessResponse(response);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.FailResponse("Error: " + ex.Message);
-            }
-        }
-
-        public async Task<ApiResponse<string>> ReorderAsync(List<int> ids)
-        {
-            try
-            {
-                await _repo.UpdateOrderAsync(ids);
-                return ApiResponse<string>.SuccessResponse("Order updated");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<string>.FailResponse("Error: " + ex.Message);
             }
         }
 

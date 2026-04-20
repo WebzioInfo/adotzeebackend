@@ -14,8 +14,9 @@ namespace Adotzee_Backend.Services.AddonsServices
         Task<ApiResponse<string>> DeleteAsync(int id);
         Task<ApiResponse<List<AddonCourseResponseDTO>>> GetByCourseIdAsync(int courseId);
         Task<ApiResponse<IEnumerable<CollegeResponseDTO>>> GetCollegesByAddonIdAsync(int addonCourseId);
-
         Task<ApiResponse<PagedResponse<AddonCourseResponseDTO>>> GetPagedAsync(PaginationParams @params);
         Task<ApiResponse<string>> ReorderAsync(List<int> ids);
+
     }
+
 }
