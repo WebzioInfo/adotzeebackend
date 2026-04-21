@@ -106,6 +106,20 @@ namespace Adotzee_Backend
                     ValidAudience = builder.Configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "THIS_IS_A_FALLBACK_KEY_DO_NOT_USE_IN_PROD"))
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine("JWT Authentication failed: " + context.Exception.Message);
+                        return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        Console.WriteLine("JWT OnChallenge: " + context.ErrorDescription);
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             builder.Services.AddDbContext<AppDbContext>(options =>
