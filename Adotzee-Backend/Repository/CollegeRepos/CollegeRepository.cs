@@ -39,12 +39,21 @@ namespace Adotzee_Backend.Repository.CollegeRepos
             }
 
             int totalCount = await query.CountAsync();
-            var items = await query.OrderBy(c => c.DisplayOrder)
-                                   .Skip((@params.PageNumber - 1) * @params.PageSize)
-                                   .Take(@params.PageSize)
-                                   .ToListAsync();
+            var itemsQuery = query.OrderBy(c => c.DisplayOrder);
 
-            return new PagedResponse<College>(items, totalCount, @params.PageNumber, @params.PageSize);
+            List<College> items;
+            if (@params.PageNumber.HasValue && @params.PageSize.HasValue)
+            {
+                items = await itemsQuery.Skip((@params.PageNumber.Value - 1) * @params.PageSize.Value)
+                                        .Take(@params.PageSize.Value)
+                                        .ToListAsync();
+            }
+            else
+            {
+                items = await itemsQuery.ToListAsync();
+            }
+
+            return new PagedResponse<College>(items, totalCount, @params.PageNumber ?? 1, @params.PageSize ?? totalCount);
         }
 
         public async Task UpdateOrderAsync(List<int> ids)

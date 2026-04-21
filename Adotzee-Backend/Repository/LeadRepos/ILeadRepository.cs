@@ -5,10 +5,7 @@ namespace Adotzee_Backend.Repository.LeadRepos
 {
     public interface ILeadRepository
     {
-        Task<(List<Lead> Leads, int TotalCount)> GetAllAsync(int pageNumber = 1, int pageSize = 10, string? search = null, string? source = null, string? status = null);
-        
-        // Cursor-based pagination
-        Task<(List<Lead> Leads, bool HasMore, int? NextCursor)> GetAllPagedAsync(int? cursor = null, int pageSize = 10, string? search = null, string? source = null, string? status = null);
+        Task<PagedResponse<Lead>> GetPagedAsync(PaginationParams @params);
 
         Task<Lead?> GetByIdAsync(int id);
         Task<Lead> AddAsync(Lead lead);

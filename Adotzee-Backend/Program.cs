@@ -5,9 +5,13 @@ using Adotzee_Backend.Repository;
 using Adotzee_Backend.Repository.AddonRepos;
 using Adotzee_Backend.Repository.CollegeRepos;
 using Adotzee_Backend.Repository.CoursesRepositories;
+using Adotzee_Backend.Repository.LeadRepos;
+using Adotzee_Backend.Repository.UserRepositories;
 using Adotzee_Backend.Services.AddonsServices;
 using Adotzee_Backend.Services.CollegeServices;
 using Adotzee_Backend.Services.CourseServices;
+using Adotzee_Backend.Services.LeadServices;
+using Adotzee_Backend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace Adotzee_Backend
@@ -17,7 +21,10 @@ namespace Adotzee_Backend
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Configuration
+                .AddEnvironmentVariables()
+                .AddJsonFile("appsettings.json")
+                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
             if (!builder.Environment.IsDevelopment())
             {
                 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -31,13 +38,18 @@ namespace Adotzee_Backend
 
 
             // Add services to the container.
+            builder.Services.AddMemoryCache();
             builder.Services.AddScoped<IAddonsService, AddonsService>();
             builder.Services.AddScoped<ICollegeService, CollegeService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
-
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<ILeadService, LeadService>();
+            builder.Services.AddScoped<ILeadRepository, LeadRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IAddonRepository, AddonRepository>();
             builder.Services.AddScoped<ICollegeRepository, CollegeRepository>();
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddHealthChecks()
@@ -86,7 +98,10 @@ namespace Adotzee_Backend
             
             app.UseCors("CorsPolicy");
 
-            app.UseHttpsRedirection();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseAuthorization();
 

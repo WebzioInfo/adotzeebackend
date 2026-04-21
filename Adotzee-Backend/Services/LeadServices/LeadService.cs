@@ -20,18 +20,20 @@ namespace Adotzee_Backend.Services.LeadServices
             _cache = cache;
         }
 
-        public async Task<ApiResponse<object>> GetAllAsync(int? cursor = null, int pageSize = 10, string? search = null, string? source = null, string? status = null)
+        public async Task<ApiResponse<PagedResponse<LeadResponseDTO>>> GetPagedAsync(PaginationParams @params)
         {
-            var result = await _repo.GetAllPagedAsync(cursor, pageSize, search, source, status);
-            var dto = _mapper.Map<List<LeadResponseDTO>>(result.Leads);
-
-            return ApiResponse<object>.SuccessResponse(new 
+            try
             {
-                Data = dto,
-                HasMore = result.HasMore,
-                NextCursor = result.NextCursor,
-                PageSize = pageSize
-            });
+                var pagedResult = await _repo.GetPagedAsync(@params);
+                var dtos = _mapper.Map<List<LeadResponseDTO>>(pagedResult.Items);
+                var pagedResponse = new PagedResponse<LeadResponseDTO>(dtos, pagedResult.TotalCount, pagedResult.PageNumber, pagedResult.PageSize);
+                
+                return ApiResponse<PagedResponse<LeadResponseDTO>>.SuccessResponse(pagedResponse);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<PagedResponse<LeadResponseDTO>>.FailResponse("Error: " + ex.Message);
+            }
         }
 
         public async Task<ApiResponse<LeadResponseDTO>> GetByIdAsync(int id)

@@ -5,7 +5,7 @@ namespace Adotzee_Backend.Services.LeadServices
 {
     public interface ILeadService
     {
-        Task<ApiResponse<object>> GetAllAsync(int? cursor = null, int pageSize = 10, string? search = null, string? source = null, string? status = null);
+        Task<ApiResponse<PagedResponse<LeadResponseDTO>>> GetPagedAsync(PaginationParams @params);
         Task<ApiResponse<LeadResponseDTO>> GetByIdAsync(int id);
         Task<ApiResponse<string>> CreateAsync(LeadCreateDTO dto);
         Task<ApiResponse<string>> UpdateAsync(LeadUpdateDTO dto);

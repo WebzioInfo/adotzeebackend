@@ -1,6 +1,6 @@
 using Adotzee_Backend.DTOs.LeadDTOs;
-using Adotzee_Backend.Models;
 using Adotzee_Backend.Services.LeadServices;
+using Adotzee_Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -18,14 +18,9 @@ namespace Adotzee_Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int? cursor = null,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null,
-            [FromQuery] string? source = null,
-            [FromQuery] string? status = null)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationParams @params)
         {
-            return Ok(await _service.GetAllAsync(cursor, pageSize, search, source, status));
+            return Ok(await _service.GetPagedAsync(@params));
         }
 
         [HttpGet("{id}")]

@@ -14,73 +14,37 @@ namespace Adotzee_Backend.Repository.LeadRepos
             _context = context;
         }
 
-        public async Task<(List<Lead> Leads, int TotalCount)> GetAllAsync(int pageNumber = 1, int pageSize = 10, string? search = null, string? source = null, string? status = null)
+        public async Task<PagedResponse<Lead>> GetPagedAsync(PaginationParams @params)
         {
             var query = _context.Leads.Where(l => !l.IsDeleted).AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(search))
+            if (!string.IsNullOrWhiteSpace(@params.Search))
             {
-                var lowerSearch = search.ToLower();
-                query = query.Where(l => l.FullName.ToLower().Contains(lowerSearch) || l.PhoneNumber.Contains(lowerSearch));
+                var lowerSearch = @params.Search.ToLower();
+                query = query.Where(l => l.FullName.ToLower().Contains(lowerSearch) || 
+                                         l.PhoneNumber.Contains(lowerSearch) ||
+                                         (l.Email != null && l.Email.ToLower().Contains(lowerSearch)));
             }
 
-            if (!string.IsNullOrWhiteSpace(source) && Enum.TryParse<LeadSource>(source, true, out var parsedSource))
-            {
-                query = query.Where(l => l.Source == parsedSource);
-            }
-
-            if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<LeadStatus>(status, true, out var parsedStatus))
-            {
-                query = query.Where(l => l.Status == parsedStatus);
-            }
+            // Filtering by Source and Status if provided in search or additional logic can be added here
+            // For now, we'll keep it simple to match PaginationParams
 
             int totalCount = await query.CountAsync();
+            var itemsQuery = query.OrderByDescending(l => l.CreatedAt);
 
-            var leads = await query
-                .OrderByDescending(l => l.CreatedAt)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return (leads, totalCount);
-        }
-
-        public async Task<(List<Lead> Leads, bool HasMore, int? NextCursor)> GetAllPagedAsync(int? cursor = null, int pageSize = 10, string? search = null, string? source = null, string? status = null)
-        {
-            var query = _context.Leads.Where(l => !l.IsDeleted).AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(search))
+            List<Lead> items;
+            if (@params.PageNumber.HasValue && @params.PageSize.HasValue)
             {
-                var lowerSearch = search.ToLower();
-                query = query.Where(l => l.FullName.ToLower().Contains(lowerSearch) || l.PhoneNumber.Contains(lowerSearch));
+                items = await itemsQuery.Skip((@params.PageNumber.Value - 1) * @params.PageSize.Value)
+                                        .Take(@params.PageSize.Value)
+                                        .ToListAsync();
+            }
+            else
+            {
+                items = await itemsQuery.ToListAsync();
             }
 
-            if (!string.IsNullOrWhiteSpace(source) && Enum.TryParse<LeadSource>(source, true, out var parsedSource))
-            {
-                query = query.Where(l => l.Source == parsedSource);
-            }
-
-            if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<LeadStatus>(status, true, out var parsedStatus))
-            {
-                query = query.Where(l => l.Status == parsedStatus);
-            }
-
-            // Cursor-based filter (assume newest first, so Id < cursor)
-            if (cursor.HasValue)
-            {
-                query = query.Where(l => l.Id < cursor.Value);
-            }
-
-            var leads = await query
-                .OrderByDescending(l => l.Id)
-                .Take(pageSize + 1) // Fetch one extra to see if there's more
-                .ToListAsync();
-
-            bool hasMore = leads.Count > pageSize;
-            var resultLeads = hasMore ? leads.Take(pageSize).ToList() : leads;
-            int? nextCursor = hasMore ? resultLeads.Last().Id : null;
-
-            return (resultLeads, hasMore, nextCursor);
+            return new PagedResponse<Lead>(items, totalCount, @params.PageNumber ?? 1, @params.PageSize ?? totalCount);
         }
 
         public async Task<Lead?> GetByIdAsync(int id)
