@@ -13,6 +13,11 @@ using Adotzee_Backend.Services.CourseServices;
 using Adotzee_Backend.Services.LeadServices;
 using Adotzee_Backend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Adotzee_Backend.Middlewares;
+using Microsoft.OpenApi.Models;
 
 namespace Adotzee_Backend
 {
@@ -20,6 +25,7 @@ namespace Adotzee_Backend
     {
         public static void Main(string[] args)
         {
+            DotNetEnv.Env.Load();
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration
                 .AddEnvironmentVariables()
@@ -59,7 +65,48 @@ namespace Adotzee_Backend
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Adotzee API", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
+            });
+
+            // Configure JWT Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "THIS_IS_A_FALLBACK_KEY_DO_NOT_USE_IN_PROD"))
+                };
+            });
 
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
@@ -96,6 +143,7 @@ namespace Adotzee_Backend
             app.UseSwagger();
             app.UseSwaggerUI();
             
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseCors("CorsPolicy");
 
             if (!app.Environment.IsDevelopment())
@@ -103,6 +151,7 @@ namespace Adotzee_Backend
                 app.UseHttpsRedirection();
             }
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
