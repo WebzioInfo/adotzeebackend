@@ -33,6 +33,14 @@ namespace Adotzee_Backend.Middlewares
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
+            // Ensure CORS headers are present even on errors
+            if (context.Request.Headers.ContainsKey("Origin"))
+            {
+                context.Response.Headers["Access-Control-Allow-Origin"] = context.Request.Headers["Origin"];
+                context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+                context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+            }
+
             var response = ApiResponse<object>.FailResponse("An unexpected error occurred. Please try again later.");
 
             var result = JsonSerializer.Serialize(response);

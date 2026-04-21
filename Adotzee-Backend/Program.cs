@@ -98,8 +98,8 @@ namespace Adotzee_Backend
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
+                    ValidateIssuer = false, // Temporarily disabled for debugging
+                    ValidateAudience = false, // Temporarily disabled for debugging
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
@@ -140,11 +140,11 @@ namespace Adotzee_Backend
 
             var app = builder.Build();
 
+            app.UseCors("CorsPolicy");
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             app.UseSwagger();
             app.UseSwaggerUI();
-            
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
-            app.UseCors("CorsPolicy");
 
             if (!app.Environment.IsDevelopment())
             {
