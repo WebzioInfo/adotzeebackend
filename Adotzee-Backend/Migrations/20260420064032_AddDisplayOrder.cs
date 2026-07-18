@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,9 +10,9 @@ namespace Adotzee_Backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Location",
-                table: "Colleges");
+            // migrationBuilder.DropColumn(
+            //    name: "Location",
+            //    table: "Colleges");
 
             migrationBuilder.AddColumn<int>(
                 name: "DisplayOrder",
