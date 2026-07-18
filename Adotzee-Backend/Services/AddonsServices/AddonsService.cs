@@ -20,153 +20,90 @@ namespace Adotzee_Backend.Services.AddonsServices
 
         public async Task<ApiResponse<List<AddonCourseResponseDTO>>> GetAllAsync()
         {
-            try
-            {
-                var data = await _repo.GetAllAsync();
-                var result = _mapper.Map<List<AddonCourseResponseDTO>>(data);
-                return ApiResponse<List<AddonCourseResponseDTO>>.SuccessResponse(result);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<List<AddonCourseResponseDTO>>.FailResponse("Error fetching addons: " + ex.Message);
-            }
+            var data = await _repo.GetAllAsync();
+            var result = _mapper.Map<List<AddonCourseResponseDTO>>(data);
+            return ApiResponse<List<AddonCourseResponseDTO>>.SuccessResponse(result);
         }
 
         public async Task<ApiResponse<PagedResponse<AddonCourseResponseDTO>>> GetPagedAsync(PaginationParams @params)
         {
-            try
-            {
-                var paged = await _repo.GetPagedAsync(@params);
-                var mappedItems = _mapper.Map<List<AddonCourseResponseDTO>>(paged.Items);
-                var response = new PagedResponse<AddonCourseResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
-                return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.SuccessResponse(response);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.FailResponse("Error: " + ex.Message);
-            }
+            var paged = await _repo.GetPagedAsync(@params);
+            var mappedItems = _mapper.Map<List<AddonCourseResponseDTO>>(paged.Items);
+            var response = new PagedResponse<AddonCourseResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
+            return ApiResponse<PagedResponse<AddonCourseResponseDTO>>.SuccessResponse(response);
         }
 
         public async Task<ApiResponse<string>> ReorderAsync(List<int> ids)
         {
-            try
-            {
-                await _repo.UpdateOrderAsync(ids);
-                return ApiResponse<string>.SuccessResponse("Order updated");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<string>.FailResponse("Error updating order: " + ex.Message);
-            }
+            await _repo.UpdateOrderAsync(ids);
+            return ApiResponse<string>.SuccessResponse("Order updated");
         }
 
         public async Task<ApiResponse<AddonCourseResponseDTO>> GetByIdAsync(int id)
         {
-            try
-            {
-                var addon = await _repo.GetByIdAsync(id);
-                if (addon == null)
-                    return ApiResponse<AddonCourseResponseDTO>.FailResponse("Addon not found");
+            var addon = await _repo.GetByIdAsync(id);
+            if (addon == null)
+                return ApiResponse<AddonCourseResponseDTO>.FailResponse("Addon not found");
 
-                var result = _mapper.Map<AddonCourseResponseDTO>(addon);
-                return ApiResponse<AddonCourseResponseDTO>.SuccessResponse(result);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<AddonCourseResponseDTO>.FailResponse("Error: " + ex.Message);
-            }
+            var result = _mapper.Map<AddonCourseResponseDTO>(addon);
+            return ApiResponse<AddonCourseResponseDTO>.SuccessResponse(result);
         }
 
         public async Task<ApiResponse<AddonCourseResponseDTO>> CreateAsync(AddonCourseCreateDTO dto)
         {
-            try
-            {
-                var addon = _mapper.Map<AddonCourse>(dto);
-                var saved = await _repo.CreateAsync(addon);
-                var result = _mapper.Map<AddonCourseResponseDTO>(saved);
-                return ApiResponse<AddonCourseResponseDTO>.SuccessResponse(result, "Addon created successfully");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<AddonCourseResponseDTO>.FailResponse("Error creating addon: " + ex.Message);
-            }
+            var addon = _mapper.Map<AddonCourse>(dto);
+            var saved = await _repo.CreateAsync(addon);
+            var result = _mapper.Map<AddonCourseResponseDTO>(saved);
+            return ApiResponse<AddonCourseResponseDTO>.SuccessResponse(result, "Addon created successfully");
         }
 
         public async Task<ApiResponse<AddonCourseResponseDTO>> UpdateAsync(AddonCourseUpdateDTO dto)
         {
-            try
-            {
-                var existing = await _repo.GetByIdAsync(dto.Id);
-                if (existing == null)
-                    return ApiResponse<AddonCourseResponseDTO>.FailResponse("Addon not found");
+            var existing = await _repo.GetByIdAsync(dto.Id);
+            if (existing == null)
+                return ApiResponse<AddonCourseResponseDTO>.FailResponse("Addon not found");
 
-                // Clear existing colleges
-                existing.AddonColleges.Clear();
+            // Clear existing colleges
+            existing.AddonColleges.Clear();
 
-                // Map updated values
-                _mapper.Map(dto, existing);
-                existing.AddonColleges = dto.CollegeIds.Select(id => new AddonCollege { CollegeId = id }).ToList();
+            // Map updated values
+            _mapper.Map(dto, existing);
+            existing.AddonColleges = dto.CollegeIds.Select(id => new AddonCollege { CollegeId = id }).ToList();
 
-                var updated = await _repo.UpdateAsync(existing);
-                var result = _mapper.Map<AddonCourseResponseDTO>(updated);
+            var updated = await _repo.UpdateAsync(existing);
+            var result = _mapper.Map<AddonCourseResponseDTO>(updated);
 
-                return ApiResponse<AddonCourseResponseDTO>.SuccessResponse(result, "Addon updated successfully");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<AddonCourseResponseDTO>.FailResponse("Error updating addon: " + ex.Message);
-            }
+            return ApiResponse<AddonCourseResponseDTO>.SuccessResponse(result, "Addon updated successfully");
         }
 
         public async Task<ApiResponse<string>> DeleteAsync(int id)
         {
-            try
-            {
-                var success = await _repo.DeleteAsync(id);
-                if (!success)
-                    return ApiResponse<string>.FailResponse("Addon not found");
+            var success = await _repo.DeleteAsync(id);
+            if (!success)
+                return ApiResponse<string>.FailResponse("Addon not found");
 
-                return ApiResponse<string>.SuccessResponse("Addon deleted successfully");
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<string>.FailResponse("Error deleting addon: " + ex.Message);
-            }
+            return ApiResponse<string>.SuccessResponse("Addon deleted successfully");
         }
 
         public async Task<ApiResponse<List<AddonCourseResponseDTO>>> GetByCourseIdAsync(int courseId)
         {
-            try
-            {
-                var addons = await _repo.GetByCourseIdAsync(courseId);
-                var result = _mapper.Map<List<AddonCourseResponseDTO>>(addons);
-                return ApiResponse<List<AddonCourseResponseDTO>>.SuccessResponse(result);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<List<AddonCourseResponseDTO>>.FailResponse("Error fetching by course: " + ex.Message);
-            }
+            var addons = await _repo.GetByCourseIdAsync(courseId);
+            var result = _mapper.Map<List<AddonCourseResponseDTO>>(addons);
+            return ApiResponse<List<AddonCourseResponseDTO>>.SuccessResponse(result);
         }
 
         public async Task<ApiResponse<IEnumerable<CollegeResponseDTO>>> GetCollegesByAddonIdAsync(int addonCourseId)
         {
-            try
+            var colleges = await _repo.GetCollegesByAddonIdAsync(addonCourseId);
+
+            if (colleges == null || !colleges.Any())
             {
-                var colleges = await _repo.GetCollegesByAddonIdAsync(addonCourseId);
-
-                if (colleges == null || !colleges.Any())
-                {
-                    return ApiResponse<IEnumerable<CollegeResponseDTO>>.FailResponse("No colleges found for the specified Addon Course.");
-                }
-
-                var responseDTOs = _mapper.Map<IEnumerable<CollegeResponseDTO>>(colleges);
-
-                return ApiResponse<IEnumerable<CollegeResponseDTO>>.SuccessResponse(responseDTOs, "Colleges retrieved successfully.");
+                return ApiResponse<IEnumerable<CollegeResponseDTO>>.FailResponse("No colleges found for the specified Addon Course.");
             }
-            catch (Exception ex)
-            {
-                return ApiResponse<IEnumerable<CollegeResponseDTO>>.FailResponse($"An error occurred: {ex.Message}");
-            }
+
+            var responseDTOs = _mapper.Map<IEnumerable<CollegeResponseDTO>>(colleges);
+
+            return ApiResponse<IEnumerable<CollegeResponseDTO>>.SuccessResponse(responseDTOs, "Colleges retrieved successfully.");
         }
 
     }

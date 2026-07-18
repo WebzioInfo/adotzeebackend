@@ -18,35 +18,28 @@ namespace Adotzee_Backend.Services.RecommendationServices
 
         public async Task<ApiResponse<RecommendationResponseDTO>> GetRecommendationsAsync(RecommendationRequestDTO request)
         {
-            try
+            // Simple cache key generation
+            string cacheKey = $"recommendations_{request.Interests}_{request.Location}_{request.PreferredStream}_{request.PreferredCourseType}_{request.PreferredDuration}";
+            
+            if (!_cache.TryGetValue(cacheKey, out RecommendationResponseDTO? responseDto))
             {
-                // Simple cache key generation
-                string cacheKey = $"recommendations_{request.Interests}_{request.Location}_{request.PreferredStream}_{request.PreferredCourseType}_{request.PreferredDuration}";
-                
-                if (!_cache.TryGetValue(cacheKey, out RecommendationResponseDTO? responseDto))
+                var (courses, colleges, addons) = await _repo.GetRecommendationsAsync(request);
+
+                responseDto = new RecommendationResponseDTO
                 {
-                    var (courses, colleges, addons) = await _repo.GetRecommendationsAsync(request);
+                    RecommendedCourses = courses,
+                    RecommendedColleges = colleges,
+                    RecommendedAddons = addons
+                };
 
-                    responseDto = new RecommendationResponseDTO
-                    {
-                        RecommendedCourses = courses,
-                        RecommendedColleges = colleges,
-                        RecommendedAddons = addons
-                    };
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(15));
 
-                    var cacheOptions = new MemoryCacheEntryOptions()
-                        .SetSlidingExpiration(TimeSpan.FromMinutes(5))
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(15));
-
-                    _cache.Set(cacheKey, responseDto, cacheOptions);
-                }
-
-                return ApiResponse<RecommendationResponseDTO>.SuccessResponse(responseDto!, "Recommendations generated successfully");
+                _cache.Set(cacheKey, responseDto, cacheOptions);
             }
-            catch (Exception ex)
-            {
-                return ApiResponse<RecommendationResponseDTO>.FailResponse($"Failed to generate recommendations: {ex.Message}");
-            }
+
+            return ApiResponse<RecommendationResponseDTO>.SuccessResponse(responseDto!, "Recommendations generated successfully");
         }
     }
 }

@@ -24,30 +24,23 @@ public class CollegeService : ICollegeService
 
     public async Task<ApiResponse<PagedResponse<CollegeResponseDTO>>> GetPagedAsync(PaginationParams @params)
     {
-        try
-        {
             var paged = await _repo.GetPagedAsync(@params);
             var mappedItems = _mapper.Map<List<CollegeResponseDTO>>(paged.Items);
             var response = new PagedResponse<CollegeResponseDTO>(mappedItems, paged.TotalCount, paged.PageNumber, paged.PageSize);
             return ApiResponse<PagedResponse<CollegeResponseDTO>>.SuccessResponse(response);
-        }
-        catch (Exception ex)
-        {
-            return ApiResponse<PagedResponse<CollegeResponseDTO>>.FailResponse("Error: " + ex.Message);
-        }
+    }
+
+    public async Task<ApiResponse<List<CollegeResponseDTO>>> GetAllUnpaginatedAsync()
+    {
+        var colleges = await _repo.GetAllAsync();
+        var mappedItems = _mapper.Map<List<CollegeResponseDTO>>(colleges);
+        return ApiResponse<List<CollegeResponseDTO>>.SuccessResponse(mappedItems);
     }
 
     public async Task<ApiResponse<string>> ReorderAsync(List<int> ids)
     {
-        try
-        {
             await _repo.UpdateOrderAsync(ids);
             return ApiResponse<string>.SuccessResponse("Order updated");
-        }
-        catch (Exception ex)
-        {
-            return ApiResponse<string>.FailResponse("Error updating order: " + ex.Message);
-        }
     }
 
     public async Task<ApiResponse<CollegeResponseDTO>> GetByIdAsync(int id)

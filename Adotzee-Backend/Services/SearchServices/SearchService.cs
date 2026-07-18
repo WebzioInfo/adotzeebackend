@@ -15,23 +15,16 @@ namespace Adotzee_Backend.Services.SearchServices
 
         public async Task<ApiResponse<GlobalSearchResponseDTO>> GlobalSearchAsync(string query)
         {
-            try
-            {
-                var (courses, colleges, addons) = await _repo.GlobalSearchAsync(query);
+            var (courses, colleges, addons) = await _repo.GlobalSearchAsync(query);
 
-                var responseDto = new GlobalSearchResponseDTO
-                {
-                    Courses = courses,
-                    Colleges = colleges,
-                    Addons = addons
-                };
-
-                return ApiResponse<GlobalSearchResponseDTO>.SuccessResponse(responseDto, "Search completed successfully");
-            }
-            catch (Exception ex)
+            var responseDto = new GlobalSearchResponseDTO
             {
-                return ApiResponse<GlobalSearchResponseDTO>.FailResponse($"Search failed: {ex.Message}");
-            }
+                Courses = courses,
+                Colleges = colleges,
+                Addons = addons
+            };
+
+            return ApiResponse<GlobalSearchResponseDTO>.SuccessResponse(responseDto, "Search completed successfully");
         }
     }
 }

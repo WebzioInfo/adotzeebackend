@@ -12,12 +12,16 @@ using Adotzee_Backend.Services.CollegeServices;
 using Adotzee_Backend.Services.CourseServices;
 using Adotzee_Backend.Services.LeadServices;
 using Adotzee_Backend.Services.UserServices;
+using Adotzee_Backend.Services.ReviewServices;
+using Adotzee_Backend.Repository.ReviewRepos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Adotzee_Backend.Middlewares;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 namespace Adotzee_Backend
 {
@@ -37,13 +41,32 @@ namespace Adotzee_Backend
                 {
                     var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
                     serverOptions.ListenAnyIP(Int32.Parse(port));
+                    serverOptions.AddServerHeader = false;
+                });
+            }
+            else
+            {
+                builder.WebHost.ConfigureKestrel(serverOptions =>
+                {
+                    serverOptions.AddServerHeader = false;
                 });
             }
 
-
-
-
-            // Add services to the container.
+            // Configure Rate Limiting
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 100,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromMinutes(1)
+                        }));
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            });            // Add services to the container.
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<IAddonsService, AddonsService>();
             builder.Services.AddScoped<ICollegeService, CollegeService>();
@@ -55,6 +78,8 @@ namespace Adotzee_Backend
             builder.Services.AddScoped<IAddonRepository, AddonRepository>();
             builder.Services.AddScoped<ICollegeRepository, CollegeRepository>();
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+            builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
 
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -146,8 +171,8 @@ namespace Adotzee_Backend
                 options.AddPolicy("CorsPolicy", policy =>
                 {
                     policy.WithOrigins(allowedOrigins)
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "Accept")
+                          .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
                 });
             });
 
@@ -162,8 +187,20 @@ namespace Adotzee_Backend
 
             if (!app.Environment.IsDevelopment())
             {
+                app.UseHsts();
                 app.UseHttpsRedirection();
             }
+
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Append("X-Frame-Options", "DENY");
+                context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+                context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+                context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;");
+                await next();
+            });
+
+            app.UseRateLimiter();
 
             app.UseAuthentication();
             app.UseAuthorization();

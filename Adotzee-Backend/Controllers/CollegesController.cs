@@ -21,6 +21,10 @@ namespace Adotzee_Backend.Controllers
         public async Task<IActionResult> GetAll([FromQuery] PaginationParams @params)
             => Ok(await _service.GetPagedAsync(@params));
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllUnpaginated()
+            => Ok(await _service.GetAllUnpaginatedAsync());
+
         [Authorize(Roles = "Admin")]
         [HttpPut("reorder")]
         public async Task<IActionResult> Reorder([FromBody] List<int> ids)
@@ -34,9 +38,6 @@ namespace Adotzee_Backend.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CollegeCreateDTO dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             return Ok(await _service.CreateAsync(dto));
         }
 
@@ -44,9 +45,6 @@ namespace Adotzee_Backend.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] CollegeUpdateDTO dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             return Ok(await _service.UpdateAsync(dto));
         }
 

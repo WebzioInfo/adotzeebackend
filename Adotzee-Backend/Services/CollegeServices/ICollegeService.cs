@@ -7,6 +7,7 @@ namespace Adotzee_Backend.Services.CollegeServices
     {
         Task<ApiResponse<List<CollegeResponseDTO>>> GetAllAsync();
         Task<ApiResponse<PagedResponse<CollegeResponseDTO>>> GetPagedAsync(PaginationParams @params);
+        Task<ApiResponse<List<CollegeResponseDTO>>> GetAllUnpaginatedAsync();
         Task<ApiResponse<string>> ReorderAsync(List<int> ids);
         Task<ApiResponse<CollegeResponseDTO>> GetByIdAsync(int id);
         Task<ApiResponse<string>> CreateAsync(CollegeCreateDTO dto);

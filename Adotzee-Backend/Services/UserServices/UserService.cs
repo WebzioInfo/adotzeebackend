@@ -53,71 +53,53 @@ namespace Adotzee_Backend.Services.UserServices
 
         public async Task<ApiResponse<LoginResponseDTO>> Login(LoginDTO dto)
         {
-            try
-            {
-                var user = await _userRepo.GetByEmail(dto.Email);
+            var user = await _userRepo.GetByEmail(dto.Email);
 
-                if (user == null)
-                    return ApiResponse<LoginResponseDTO>
-                        .FailResponse("User not found");
-
-                if (user.IsBlocked)
-                    return ApiResponse<LoginResponseDTO>
-                        .FailResponse("User blocked");
-
-                if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-                    return ApiResponse<LoginResponseDTO>
-                        .FailResponse("Invalid password");
-
-                var token = GenerateToken(user);
-
-                return ApiResponse<LoginResponseDTO>.SuccessResponse(
-                    new LoginResponseDTO
-                    {
-                        Token = token,
-                        Email = user.Email,
-                        Id = user.Id,
-                        Name = user.Name,
-                        Role = user.Role,
-                    },
-                    "Login successful"
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Login failed");
+            if (user == null)
                 return ApiResponse<LoginResponseDTO>
-                    .FailResponse("Login error");
-            }
+                    .FailResponse("User not found");
+
+            if (user.IsBlocked)
+                return ApiResponse<LoginResponseDTO>
+                    .FailResponse("User blocked");
+
+            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+                return ApiResponse<LoginResponseDTO>
+                    .FailResponse("Invalid password");
+
+            var token = GenerateToken(user);
+
+            return ApiResponse<LoginResponseDTO>.SuccessResponse(
+                new LoginResponseDTO
+                {
+                    Token = token,
+                    Email = user.Email,
+                    Id = user.Id,
+                    Name = user.Name,
+                    Role = user.Role,
+                },
+                "Login successful"
+            );
         }
 
         /* ---------------- REGISTER ---------------- */
 
         public async Task<ApiResponse<bool>> Register(RegisterDTO dto)
         {
-            try
-            {
-                var existing = await _userRepo.GetByEmail(dto.Email);
+            var existing = await _userRepo.GetByEmail(dto.Email);
 
-                if (existing != null)
-                    return ApiResponse<bool>
-                        .FailResponse("User already exists");
-
-                if (dto.Password == null) return ApiResponse<bool>.FailResponse("Password is required");
-                dto.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-
-                var user = _mapper.Map<User>(dto);
-                await _userRepo.Add(user);
-
+            if (existing != null)
                 return ApiResponse<bool>
-                    .SuccessResponse(true, "Registration successful");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Registration failed");
-                return ApiResponse<bool>
-                    .FailResponse("Registration failed");
-            }
+                    .FailResponse("User already exists");
+
+            if (dto.Password == null) return ApiResponse<bool>.FailResponse("Password is required");
+            dto.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+            var user = _mapper.Map<User>(dto);
+            await _userRepo.Add(user);
+
+            return ApiResponse<bool>
+                .SuccessResponse(true, "Registration successful");
         }
 
         /* ---------------- DELETE ---------------- */

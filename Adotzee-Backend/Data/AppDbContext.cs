@@ -16,6 +16,7 @@ namespace Adotzee_Backend.Data
         public DbSet<AddonCollege> AddonColleges { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Lead> Leads { get; set; }
+        public DbSet<Review> Reviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,6 +39,14 @@ namespace Adotzee_Backend.Data
 
             modelBuilder.Entity<Course>()
                 .Property(c => c.Stream)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Review>()
+                .Property(r => r.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Review>()
+                .Property(r => r.VerificationType)
                 .HasConversion<string>();
 
             modelBuilder.Entity<AddonCollege>()
@@ -65,6 +74,7 @@ namespace Adotzee_Backend.Data
             modelBuilder.Entity<Course>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<AddonCourse>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<AddonCollege>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Review>().HasQueryFilter(e => !e.IsDeleted);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
