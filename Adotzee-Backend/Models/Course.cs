@@ -2,7 +2,7 @@ using Adotzee_Backend.Helpers;
 
 namespace Adotzee_Backend.Models
 {
-    public class Course
+    public class Course : BaseEntity
     {
         public int Id { get; set; }
         public required string Name { get; set; }

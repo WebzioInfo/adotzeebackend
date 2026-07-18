@@ -30,8 +30,6 @@ namespace Adotzee_Backend.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] LeadCreateDTO dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             return Ok(await _service.CreateAsync(dto));
         }
@@ -39,8 +37,6 @@ namespace Adotzee_Backend.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] LeadUpdateDTO dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             return Ok(await _service.UpdateAsync(dto));
         }

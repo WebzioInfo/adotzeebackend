@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Adotzee_Backend.Models
 {
-    public class Lead
+    public class Lead : BaseEntity
     {
         [Key]
         public int Id { get; set; }
@@ -34,10 +34,5 @@ namespace Adotzee_Backend.Models
         public int? AssignedToUserId { get; set; }
         public User? AssignedToUser { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime? UpdatedAt { get; set; }
-
-        public bool IsDeleted { get; set; } = false;
     }
 }

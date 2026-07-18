@@ -81,7 +81,7 @@ namespace Adotzee_Backend.Repository.AddonRepos
         {
             _context.AddonCourses.Add(addon);
             await _context.SaveChangesAsync();
-            return addon;
+            return await GetByIdAsync(addon.Id) ?? addon;
         }
 
         public async Task<AddonCourse> UpdateAsync(AddonCourse addon)

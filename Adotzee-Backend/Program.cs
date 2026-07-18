@@ -98,8 +98,8 @@ namespace Adotzee_Backend
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false, // Temporarily disabled for debugging
-                    ValidateAudience = false, // Temporarily disabled for debugging
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],

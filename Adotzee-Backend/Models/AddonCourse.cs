@@ -1,6 +1,6 @@
 namespace Adotzee_Backend.Models
 {
-    public class AddonCourse
+    public class AddonCourse : BaseEntity
     {
         public int Id { get; set; }
         public required string Name { get; set; }

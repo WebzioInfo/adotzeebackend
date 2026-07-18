@@ -1,4 +1,4 @@
-﻿using Adotzee_Backend.Models;
+using Adotzee_Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Adotzee_Backend.Data
@@ -19,6 +19,19 @@ namespace Adotzee_Backend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Lead>()
+                .HasIndex(l => l.Email);
+
+            modelBuilder.Entity<Lead>()
+                .HasIndex(l => l.AssignedToUserId);
+
+            modelBuilder.Entity<Lead>()
+                .HasIndex(l => l.Status);
+
             modelBuilder.Entity<Course>()
                 .Property(c => c.Type)
                 .HasConversion<string>();
@@ -30,18 +43,47 @@ namespace Adotzee_Backend.Data
             modelBuilder.Entity<AddonCollege>()
                 .HasOne(ac => ac.AddonCourse)
                 .WithMany(a => a.AddonColleges)
-                .HasForeignKey(ac => ac.AddonCourseId);
+                .HasForeignKey(ac => ac.AddonCourseId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AddonCollege>()
                 .HasOne(ac => ac.College)
                 .WithMany(c => c.AddonColleges)
-                .HasForeignKey(ac => ac.CollegeId);
+                .HasForeignKey(ac => ac.CollegeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AddonCourse>()
                 .HasOne(ac => ac.Course)
                 .WithMany(c => c.AddonCourses)
-                .HasForeignKey(ac => ac.CourseId);
+                .HasForeignKey(ac => ac.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            // Global Query Filters for Soft Delete
+            modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Lead>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<College>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Course>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<AddonCourse>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<AddonCollege>().HasQueryFilter(e => !e.IsDeleted);
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries<BaseEntity>();
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }

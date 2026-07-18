@@ -1,6 +1,6 @@
 namespace Adotzee_Backend.Models
 {
-    public class AddonCollege
+    public class AddonCollege : BaseEntity
     {
         public int Id { get; set; }
 
