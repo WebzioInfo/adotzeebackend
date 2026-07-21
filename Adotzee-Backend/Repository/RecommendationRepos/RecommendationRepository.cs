@@ -79,11 +79,17 @@ namespace Adotzee_Backend.Repository.RecommendationRepos
 
             // Addons logic (Filter by relevance to recommended courses)
             var recommendedCourseIds = scoredCourses.Select(c => c.Id).ToList();
-            var addonCandidates = await _context.AddonCourses
+            
+            // Fix: EF Core cannot translate keywords.Any(k => a.Name.Contains(k)). 
+            // We fetch the base candidates first or evaluate in-memory.
+            var allAddons = await _context.AddonCourses
                 .AsNoTracking()
                 .Include(a => a.AddonColleges)
-                .Where(a => keywords.Any(k => a.Name.Contains(k)) || recommendedCourseIds.Contains(a.CourseId))
                 .ToListAsync();
+
+            var addonCandidates = allAddons
+                .Where(a => keywords.Any(k => a.Name.ToLower().Contains(k)) || recommendedCourseIds.Contains(a.CourseId))
+                .ToList();
 
             var recommendedCollegeIds = scoredColleges.Select(c => c.Id).ToList();
             var scoredAddons = addonCandidates.Select(a => new
