@@ -17,6 +17,9 @@ namespace Adotzee_Backend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Lead> Leads { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<AptitudeCategory> AptitudeCategories { get; set; }
+        public DbSet<AptitudeQuestion> AptitudeQuestions { get; set; }
+        public DbSet<AssessmentResult> AssessmentResults { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
