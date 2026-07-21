@@ -1,8 +1,9 @@
-﻿namespace Adotzee_Backend.Models
+namespace Adotzee_Backend.Models
 {
     public class ApiResponse<T>
     {
         public bool Success { get; set; }
+        public string? Code { get; set; }
         public string? Message { get; set; }
         public T? Data { get; set; }
 
@@ -11,9 +12,9 @@
             return new ApiResponse<T> { Success = true, Data = data, Message = message };
         }
 
-        public static ApiResponse<T> FailResponse(string message)
+        public static ApiResponse<T> FailResponse(string message, string? code = null)
         {
-            return new ApiResponse<T> { Success = false, Message = message };
+            return new ApiResponse<T> { Success = false, Code = code, Message = message };
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Adotzee_Backend.Helpers
         public static double CalculateCollegeScore(
             College college, 
             string[] keywords, 
-            string userLocation, 
+            List<string> userLocations, 
             Dictionary<string, int> popularity)
         {
             double score = 0;
@@ -93,15 +93,17 @@ namespace Adotzee_Backend.Helpers
             score += Math.Min(interestScore, 35);
 
             // 2. Location Relevance (15%)
-            if (!string.IsNullOrEmpty(userLocation))
+            if (userLocations != null && userLocations.Any())
             {
-                userLocation = userLocation.ToLower().Trim();
-                if (address.Contains(userLocation))
+                bool exactMatch = userLocations.Any(loc => address.Contains(loc));
+                bool partialMatch = userLocations.Any(loc => IsPartialRegionMatch(address, loc));
+
+                if (exactMatch)
                 {
                     // Exact keyword in address
                     score += 15; 
                 }
-                else if (IsPartialRegionMatch(address, userLocation))
+                else if (partialMatch)
                 {
                     score += 10;
                 }

@@ -14,6 +14,9 @@ using Adotzee_Backend.Services.LeadServices;
 using Adotzee_Backend.Services.UserServices;
 using Adotzee_Backend.Services.ReviewServices;
 using Adotzee_Backend.Repository.ReviewRepos;
+using Adotzee_Backend.Services.ScholarshipServices;
+using Adotzee_Backend.Repository.RecommendationRepos;
+using Adotzee_Backend.Services.RecommendationServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -80,7 +83,9 @@ namespace Adotzee_Backend
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
-
+            builder.Services.AddScoped<IScholarshipService, ScholarshipService>();
+            builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+            builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddHealthChecks()

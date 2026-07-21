@@ -19,7 +19,10 @@ namespace Adotzee_Backend.Repository.RecommendationRepos
         public async Task<(IEnumerable<Course> Courses, IEnumerable<College> Colleges, IEnumerable<AddonCourse> Addons)> GetRecommendationsAsync(RecommendationRequestDTO request)
         {
             var keywords = RecommendationScoringHelper.ExpandKeywords(request.Interests);
-            var location = request.Location?.ToLower().Trim() ?? string.Empty;
+            var locations = request.Location?
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Trim().ToLower())
+                .ToList() ?? new List<string>();
 
             // 1. Single-pass Popularity Aggregation (Optimization for Scale)
             var leadData = await _context.Leads
@@ -49,11 +52,13 @@ namespace Adotzee_Backend.Repository.RecommendationRepos
                             (streamMatch && c.Stream == sEnum))
                 .ToListAsync();
 
-            var collegeCandidates = await _context.Colleges
-                .AsNoTracking()
-                .Where(c => (c.Address != null && c.Address.Contains(location)) ||
-                            c.IsRecommended == true)
-                .ToListAsync();
+            var allColleges = await _context.Colleges.AsNoTracking().ToListAsync();
+            
+            var collegeCandidates = allColleges.Where(c => 
+                c.IsRecommended == true || 
+                (!locations.Any()) || 
+                (c.Address != null && locations.Any(l => c.Address.ToLower().Contains(l)))
+            ).ToList();
 
             // 3. Multi-Factor Scoring
             var scoredCourses = courseCandidates.Select(c => new
@@ -70,7 +75,7 @@ namespace Adotzee_Backend.Repository.RecommendationRepos
             var scoredColleges = collegeCandidates.Select(c => new
             {
                 College = c,
-                Score = RecommendationScoringHelper.CalculateCollegeScore(c, keywords, location, collegePopularity)
+                Score = RecommendationScoringHelper.CalculateCollegeScore(c, keywords, locations, collegePopularity)
             })
             .OrderByDescending(x => x.Score)
             .Take(8)

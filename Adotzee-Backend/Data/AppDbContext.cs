@@ -20,6 +20,8 @@ namespace Adotzee_Backend.Data
         public DbSet<AptitudeCategory> AptitudeCategories { get; set; }
         public DbSet<AptitudeQuestion> AptitudeQuestions { get; set; }
         public DbSet<AssessmentResult> AssessmentResults { get; set; }
+        public DbSet<Scholarship> Scholarships { get; set; }
+        public DbSet<ScholarshipEnquiry> ScholarshipEnquiries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -78,6 +80,8 @@ namespace Adotzee_Backend.Data
             modelBuilder.Entity<AddonCourse>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<AddonCollege>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Review>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Scholarship>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<ScholarshipEnquiry>().HasQueryFilter(e => !e.IsDeleted);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

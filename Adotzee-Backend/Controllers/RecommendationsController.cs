@@ -52,7 +52,10 @@ namespace Adotzee_Backend.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unexpected error occurred while generating recommendations.");
-                return StatusCode(500, ApiResponse<RecommendationResponseDTO>.FailResponse("Our engine encountered an unexpected error while processing your recommendations. We have logged this for review."));
+                return StatusCode(500, ApiResponse<RecommendationResponseDTO>.FailResponse(
+                    "Recommendation service is temporarily unavailable.", 
+                    "SERVICE_CONFIGURATION_ERROR"
+                ));
             }
         }
     }
