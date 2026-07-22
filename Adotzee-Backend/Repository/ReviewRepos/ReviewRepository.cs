@@ -72,11 +72,23 @@ namespace Adotzee_Backend.Repository.ReviewRepos
 
         public async Task<List<Review>> GetFeaturedAsync()
         {
-            return await _context.Reviews
+            var featured = await _context.Reviews
                 .Where(r => r.Featured && r.Status == ReviewStatus.Approved)
                 .OrderByDescending(r => r.CreatedAt)
-                .Take(10) // Limit to 10 featured reviews
+                .Take(10)
                 .ToListAsync();
+
+            if (featured.Count == 0)
+            {
+                return await _context.Reviews
+                    .Where(r => r.Status == ReviewStatus.Approved)
+                    .OrderByDescending(r => r.Rating)
+                    .ThenByDescending(r => r.CreatedAt)
+                    .Take(10)
+                    .ToListAsync();
+            }
+
+            return featured;
         }
 
         public async Task<Review?> GetByIdAsync(int id)

@@ -13,6 +13,7 @@ using Adotzee_Backend.Services.CourseServices;
 using Adotzee_Backend.Services.LeadServices;
 using Adotzee_Backend.Services.UserServices;
 using Adotzee_Backend.Services.ReviewServices;
+using Adotzee_Backend.Services.BlogServices;
 using Adotzee_Backend.Repository.ReviewRepos;
 using Adotzee_Backend.Services.ScholarshipServices;
 using Adotzee_Backend.Repository.RecommendationRepos;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Adotzee_Backend.Middlewares;
+using Adotzee_Backend.Services;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -83,9 +85,11 @@ namespace Adotzee_Backend
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IBlogService, BlogService>();
             builder.Services.AddScoped<IScholarshipService, ScholarshipService>();
             builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
             builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+            builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddHealthChecks()
@@ -213,6 +217,57 @@ namespace Adotzee_Backend
 
             app.MapControllers();
             app.MapHealthChecks("/health");
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<AppDbContext>();
+                    
+                    var pastMigrations = new[]
+                    {
+                        "20250724072616_initial",
+                        "20260112135841_MigrationName",
+                        "20260205090024_MakeLatLongNullable",
+                        "20260303105111_AddLeadsTable",
+                        "20260305054936_lead added",
+                        "20260420064032_AddDisplayOrder",
+                        "20260420101900_UpdateSchema",
+                        "20260420104849_ModernizeAdotzeeSchema",
+                        "20260420110336_InitialCreate",
+                        "20260718151138_AddReviewModule"
+                    };
+
+                    foreach (var migration in pastMigrations)
+                    {
+                        var sql = $@"
+                            IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = '__EFMigrationsHistory')
+                            BEGIN
+                                CREATE TABLE [__EFMigrationsHistory] (
+                                    [MigrationId] nvarchar(150) NOT NULL,
+                                    [ProductVersion] nvarchar(32) NOT NULL,
+                                    CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+                                );
+                            END;
+
+                            IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '{migration}')
+                            BEGIN
+                                INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+                                VALUES ('{migration}', '9.0.7');
+                            END;";
+                        
+                        context.Database.ExecuteSqlRaw(sql);
+                    }
+
+                    context.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while migrating or synchronizing the database.");
+                }
+            }
 
             app.Run();
         }

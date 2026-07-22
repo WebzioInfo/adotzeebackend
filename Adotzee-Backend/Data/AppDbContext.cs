@@ -17,6 +17,7 @@ namespace Adotzee_Backend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Lead> Leads { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Blog> Blogs { get; set; }
         public DbSet<AptitudeCategory> AptitudeCategories { get; set; }
         public DbSet<AptitudeQuestion> AptitudeQuestions { get; set; }
         public DbSet<AssessmentResult> AssessmentResults { get; set; }
@@ -54,6 +55,14 @@ namespace Adotzee_Backend.Data
                 .Property(r => r.VerificationType)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<Blog>()
+                .Property(b => b.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Blog>()
+                .HasIndex(b => b.Slug)
+                .IsUnique();
+
             modelBuilder.Entity<AddonCollege>()
                 .HasOne(ac => ac.AddonCourse)
                 .WithMany(a => a.AddonColleges)
@@ -80,6 +89,7 @@ namespace Adotzee_Backend.Data
             modelBuilder.Entity<AddonCourse>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<AddonCollege>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Review>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Blog>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Scholarship>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<ScholarshipEnquiry>().HasQueryFilter(e => !e.IsDeleted);
         }

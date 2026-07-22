@@ -1,4 +1,4 @@
-﻿BEGIN TRANSACTION;
+BEGIN TRANSACTION;
 ALTER TABLE [AddonColleges] DROP CONSTRAINT [FK_AddonColleges_AddonCourses_AddonCourseId];
 
 ALTER TABLE [AddonColleges] DROP CONSTRAINT [FK_AddonColleges_Colleges_CollegeId];
@@ -94,6 +94,40 @@ ALTER TABLE [AddonCourses] ADD CONSTRAINT [FK_AddonCourses_Courses_CourseId] FOR
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
 VALUES (N'20260718151138_AddReviewModule', N'9.0.7');
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Blogs')
+BEGIN
+    CREATE TABLE [Blogs] (
+        [Id] int NOT NULL IDENTITY,
+        [Title] nvarchar(255) NOT NULL,
+        [Slug] nvarchar(255) NOT NULL,
+        [Excerpt] nvarchar(500) NULL,
+        [Content] nvarchar(max) NOT NULL,
+        [CoverImage] nvarchar(1000) NULL,
+        [AuthorName] nvarchar(100) NULL,
+        [AuthorRole] nvarchar(100) NULL,
+        [AuthorAvatar] nvarchar(1000) NULL,
+        [Category] nvarchar(100) NULL,
+        [Tags] nvarchar(255) NULL,
+        [Status] nvarchar(50) NOT NULL,
+        [Featured] bit NOT NULL DEFAULT 0,
+        [ReadTimeMinutes] int NOT NULL DEFAULT 5,
+        [ViewsCount] int NOT NULL DEFAULT 0,
+        [LikesCount] int NOT NULL DEFAULT 0,
+        [SharesCount] int NOT NULL DEFAULT 0,
+        [SeoTitle] nvarchar(255) NULL,
+        [MetaDescription] nvarchar(500) NULL,
+        [CanonicalUrl] nvarchar(500) NULL,
+        [PublishedAt] datetime2 NULL,
+        [ScheduledAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        CONSTRAINT [PK_Blogs] PRIMARY KEY ([Id])
+    );
+
+    CREATE UNIQUE INDEX [IX_Blogs_Slug] ON [Blogs] ([Slug]);
+END
 
 COMMIT;
 GO
